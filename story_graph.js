@@ -1,5 +1,3 @@
-// TODO: 
-// 1. make all these props private (ES6)
 
 /**************************************************
  * Value: value
@@ -37,6 +35,13 @@ class Entity {
         
         let attributeValue = new Value(value, valueType);
         this.attributes[name] = attributeValue;
+    }
+
+    getAttributeValue(name) {
+        if (!(Object.keys(this.attributes).includes(name)))
+            throw new Error("attribute to be accessed does not exist");
+        
+        return this.attributes[name];
     }
 
     editAttribute(name, value, valueType) {
@@ -84,10 +89,25 @@ class Effect extends Entity {
         this.attributeName = attributeName;
         this.newValue = newValue;
         this.newType = newType; 
+
+        this.originalValue = this.entity.getAttributeValue(name);
+        this.didPerform = false;
     }
 
     perform() {
+        if (this.didPerform)
+            throw new Error("effect can only be performed once");
+
         this.entity.editAttribute(this.attributeName, this.newValue, this.newType);
+        this.didPerform = true;
+    }
+
+    undo() {
+        if (!this.didPerform)
+            throw new Error("cannot undo an effect that is not performed");
+
+        this.entity.editAttribute(this.attributeName, this.originalValue.value, this.originalValue.type);
+        this.didPerform = false;
     }
 }
 
@@ -151,17 +171,25 @@ class Scene extends Entity {
 
     // performs all the entry effects
     performEntryEffects() {
-        for (const effect in this.onEntryEffects)
-            effect.perform();
+        this.onEntryEffects.forEach(effect => { effect.perform(); });
+    }
+
+    // undoes all the entry effects
+    undoEntryEffects() {
+        this.onEntryEffects.forEach(effect => { effect.undo(); });   
     }
 
     // performs all the exit effects
     performExitEffects() {
-        for (const effect in this.onExitEffects)
-            effect.perform();
+        this.onExitEffects.forEach(effect => { effect.perform(); });
     }
 
-    // performs all the effects on  
+    // undoes all the exit effects
+    undoExitEffects() {
+        this.onExitEffects.forEach(effect => { effect.undo(); });
+    }
+
+    // performs all the effects on choice selection
     performOnChoiceSelectionEffects(selectedChoiceId) {
         Object.keys(this.choices).forEach(choiceId => {
             if (choiceId == selectedChoiceId)
@@ -169,6 +197,23 @@ class Scene extends Entity {
             else
                 this.choices[choiceId].onRejectionEffects.forEach(effect => { effect.perform(); });
         });
+    }
+
+    // undoes all the effects on choice selection
+    undoOnChoiceSelectionEffects(selectedChoiceId) {
+        Object.keys(this.choices).forEach(choiceId => {
+            if (choiceId == selectedChoiceId)
+                this.choices[choiceId].onSelectionEffects.forEach(effect => { effect.undo(); });
+            else
+                this.choices[choiceId].onRejectionEffects.forEach(effect => { effect.undo(); });
+        });
+    }
+
+    // undoes all the effects
+    undoAllEffects(selectedChoiceId) {
+        this.undoExitEffects();
+        this.undoOnChoiceSelectionEffects(selectedChoiceId);
+        this.undoEntryEffects();
     }
 
     // returns the corresponding choice for the given id

@@ -7,12 +7,19 @@
     <title>Story Player</title>
 </head>
 <body>
-    <div>
+    <div id="story_player">
         <div>
-            <p id="scene_desc"></p>
+            <a href="javascript: player.undo();">undo</a> | 
+            <a href="javascript: player.reset();">reset</a>
         </div>
+
         <div>
-            <ul id="choices_list"></ul>
+            <div>
+                <p id="scene_desc"></p>
+            </div>
+            <div>
+                <ul id="choices_list"></ul>
+            </div>
         </div>
     </div>
 
