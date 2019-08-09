@@ -3,12 +3,18 @@ class Player {
     constructor(story) {
         this.story = story;
         this.currentSceneID = 'start';
+        
         this.undoStack = [];
-
+        this.redoStack = []
+        
         this.play(this.currentSceneID);
     }
 
     play(sceneId) {
+        // updating undo and redo count
+        document.getElementById('undo_ref').innerHTML = `undo(${this.undoStack.length})`;
+        document.getElementById('redo_ref').innerHTML = `redo(${this.redoStack.length})`;
+
         const scene = this.story.getScene(sceneId);
         document.getElementById('scene_desc').innerHTML = scene.description;
         
@@ -30,7 +36,7 @@ class Player {
         this.currentSceneID = sceneId;
     }
 
-    select(choiceId) {
+    select(choiceId, isRedo) {
         let scene = this.story.getScene(this.currentSceneID);
 
         scene.performOnChoiceSelectionEffects(choiceId);
@@ -42,6 +48,9 @@ class Player {
         };
 
         this.undoStack.push(record);
+        if (isRedo !== true) {
+            this.redoStack = [];
+        }
 
         let choice = scene.getChoice(choiceId);
 
@@ -60,6 +69,9 @@ class Player {
             // pull the history record
             let record = this.undoStack.pop();
 
+            // push to redo stack
+            this.redoStack.push(record);
+
             // undo all previous effects
             let prevScene = this.story.getScene(record.sceneId);
             prevScene.undoAllEffects(record.choiceId);
@@ -68,9 +80,21 @@ class Player {
         }
     }
 
+    redo() {
+        if (this.redoStack.length > 0) {
+            // pull the history record
+            let record = this.redoStack.pop();
+            this.select(record.choiceId, true);
+        }
+    }
+
     reset() {
         while (this.undoStack.length > 0)
             this.undo();
+
+        // emptying redo stack after undoing all scenes
+        this.redoStack = [];
+        document.getElementById('redo_ref').innerHTML = 'redo(0)';
     }
 
     stop() {
