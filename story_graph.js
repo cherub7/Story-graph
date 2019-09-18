@@ -1,80 +1,166 @@
 
 /**************************************************
- * Value: value
+ * Value
  **************************************************/
 
-class Value {
+class SGValue {
     constructor(value, type) {
-        if (typeof(value) != type)
+        if ((typeof(value) == type) ||
+            (value.isEntity === true && value.getAttributeValue('type') === type))
+        {
+            this.value = value;
+            this.valueType = type;
+        }
+        else 
+        {
             throw new Error("value of wrong type passed");
-        this.value = value;
-        this.valueType = type;
+        }
+    }
+
+    modify(op, newValue, newType) {
+        let modifiedValue = newValue;
+        if (op !== '=')
+            modifiedValue = eval(`${this.value} ${op} ${newValue};`);
+        return new SGValue(modifiedValue, newType);
     }
 }
+
+/**************************************************
+ * Collections: to store group of items
+ **************************************************/
+
+class SGUnorderedCollection {
+    constructor(itemType) {
+        this.dictionary = {};
+        this.itemType = itemType;
+    }
+
+    getValueForKey(key) {
+        if (!this.doesContainKey(key))
+            throw new Error(`${this.itemType} to be accessed does not exist`);        
+
+        return this.dictionary[key].value;
+    }
+
+    getValueObjectForKey(key) {
+        if (!this.doesContainKey(key))
+            throw new Error(`${this.itemType} to be accessed does not exist`);        
+
+        return this.dictionary[key];
+    }
+
+    getKeys() {
+        return Object.keys(this.dictionary);
+    }
+
+    doesContainKey(key) {
+        return this.getKeys().includes(key);
+    }
+
+    addValueForKey(key, value, type) {
+        if (this.doesContainKey(key))
+            throw new Error(`${this.itemType} with the same name is being created again`);
+
+        let valueObject = new SGValue(value, type);
+        this.dictionary[key] = valueObject;
+    }
+
+    editValueForKey(key, value, type) {
+        if (!this.doesContainKey(key))
+            throw new Error(`${this.itemType} to be accessed does not exist`);
+
+        let valueObject = new SGValue(value, type);
+        this.dictionary[key] = valueObject;
+    }
+
+    removeKey(key) {
+        if (!this.doesContainKey(key))
+            throw new Error(`${this.itemType} to be removed does not exist`);
+
+        delete this.dictionary[key];
+    }
+}
+
+class SGOrderedCollection extends SGUnorderedCollection {
+    constructor() {
+        // array to maintain the order in which keys are sored
+        super();
+        this.keys = [];
+    }
+
+    getKeys() {
+        return this.keys;
+    }
+
+    addValueForKey(key, value, type) {
+        super.addValueForKey(key, value, type);
+        this.keys.push(key);
+    }
+
+    removeKey(key) {
+        super.removeKey(key);
+        this.keys.splice(this.keys.indexOf(key), 1);
+    }
+}
+
+// For a Stack object, an Array() object would do fine for now
 
 /**************************************************
  * Entity: An object in the story
  **************************************************/
 
-class Entity {
-    constructor(id, name, type) {
+class SGEntity {
+    constructor(id, name, type, subtype='None', description='None') {
         this.id = id;
-        this.name = name;
-        this.description = "No description";
-        this.attributes = {};
-        this.entityType = type;
+        this.attributes = new SGUnorderedCollection('entity');
+        this.isEntity = true;
+
+        this.addDefaultAttributes(name, type, subtype, description);
     }
 
-    setDescription(description) {
-        this.description = description;
+    addDefaultAttributes(name, type, subtype, description) {
+        this.attributes.addValueForKey('name', name, 'string');
+        this.attributes.addValueForKey('type', type, 'string');
+        this.attributes.addValueForKey('sub-type', subtype, 'string');
+        this.attributes.addValueForKey('description', description, 'string');
     }
 
-    addAttribute(name, value, valueType) {
-        if (Object.keys(this.attributes).includes(name))
-            throw new Error("multiple attributes with the same name are being created");
-        
-        let attributeValue = new Value(value, valueType);
-        this.attributes[name] = attributeValue;
-    }
-
-    getAttributeValue(name) {
-        if (!(Object.keys(this.attributes).includes(name)))
-            throw new Error("attribute to be accessed does not exist");
-        
-        return this.attributes[name];
-    }
-
-    editAttribute(name, value, valueType) {
-        if (!(Object.keys(this.attributes).includes(name)))
-            throw new Error("attribute to be edited does not exist");
-        
-        let attributeValue = new Value(value, valueType);
-        this.attributes[name] = attributeValue;
-    }
-
-    removeAttribute(name) {
-        if (!(Object.keys(this.attributes).includes(name)))
-            throw new Error("attribute to be deleted does not exist");
-
-        delete this.attributes[name];
+    getAttributeValue(attributeName) {
+        return this.attributes.getValueForKey(attributeName);
     }
 }
 
-class Item extends Entity {
-    constructor(id, name) {
-        super(id, name, 'item');
+class SGObject extends SGEntity {
+    constructor(id, name, subtype, description) {
+        super(id, name, 'object', subtype, description);
     }
 }
 
-class Location extends Entity {
-    constructor(id, name) {
-        super(id, name, 'location');
-    }
-}
+/**************************************************
+ * Condition
+ **************************************************/
 
-class Character extends Entity {
-    constructor(id, name) {
-        super(id, name, 'character');
+class SGCondition extends SGEntity {
+    constructor(id, entityID, attributeName, op, value) {
+        super(id, 'None', 'condition', 'None', 'None');
+        this.addAdditionalDefaultAttributes(entityID, attributeName, op, value);
+    }
+    
+    addAdditionalDefaultAttributes(entityID, attributeName, op, value) {
+        this.attributes.addValueForKey('entityID', entityID, 'string');
+        this.attributes.addValueForKey('attributeName', attributeName, 'string');
+        this.attributes.addValueForKey('op', op, 'string');
+        this.attributes.addValueForKey('value', value, typeof(value));
+    }
+
+    evaluate(story) {
+        const entityID = this.attributes.getValueForKey('entityID');
+        const attributeName = this.attributes.getValueForKey('attributeName');
+        const op = this.attributes.getValueForKey('op');
+        const value = this.attributes.getValueForKey('value');
+        
+        // NOTE: if eval's performance is expensive, we can resort to using switch case
+        return eval(`${story.getAttributeValue('entities').getValueForKey(entityID).getAttributeValue(attributeName)} ${op} ${value};`);
     }
 }
 
@@ -82,32 +168,61 @@ class Character extends Entity {
  * Effect: a change in attribute of an entity
  **************************************************/
 
-class Effect extends Entity {
-    constructor(id, name, entity, attributeName, newValue, newType) {
-        super(id, name, 'effect');
-        this.entity = entity;
-        this.attributeName = attributeName;
-        this.newValue = newValue;
-        this.newType = newType; 
-
-        this.originalValue = this.entity.getAttributeValue(name);
-        this.didPerform = false;
+class SGEffect extends SGEntity {
+    constructor(id, entityID, attributeName, op, newValue, newType) {
+        super(id, 'None', 'effect', 'None', 'None');
+        this.addAdditionalDefaultAttributes(entityID, attributeName, op, newValue, newType);
+        this.undoStack = [];
     }
 
-    perform() {
-        if (this.didPerform)
-            throw new Error("effect can only be performed once");
+    addAdditionalDefaultAttributes(entityID, attributeName, op, newValue, newType) {
+        this.attributes.addValueForKey('entityID', entityID, 'string');
+        this.attributes.addValueForKey('attributeName', attributeName, 'string');
+        this.attributes.addValueForKey('op', op, 'string');
+        this.attributes.addValueForKey('newValue', newValue, newType);
+        this.attributes.addValueForKey('newType', newType, 'string');
 
-        this.entity.editAttribute(this.attributeName, this.newValue, this.newType);
-        this.didPerform = true;
+        this.attributes.addValueForKey('conditions', new SGUnorderedCollection('condition'), 'object');
     }
 
-    undo() {
-        if (!this.didPerform)
-            throw new Error("cannot undo an effect that is not performed");
+    evaluateConditions(story) {
+        let canPerform = true;
+        let conditions = this.attributes.getValueForKey('conditions');
+        let conditionIds = conditions.getKeys();
 
-        this.entity.editAttribute(this.attributeName, this.originalValue.value, this.originalValue.type);
-        this.didPerform = false;
+        conditionIds.forEach(conditionId => {
+            canPerform = (canPerform && conditions.getValueForKey(conditionId).evaluate(story));
+        });
+
+        return canPerform;
+    }
+
+    perform(story) {
+        let entityID = this.attributes.getValueForKey('entityID');
+        let attributeName = this.attributes.getValueForKey('attributeName');
+        let op = this.attributes.getValueForKey('op');
+        let newValue = this.attributes.getValueForKey('newValue');
+        let newType = this.attributes.getValueForKey('newType');
+
+        const prevValue = story.getAttributeValue('entities').getValueForKey(entityID).attributes.getValueObjectForKey(attributeName);
+        this.undoStack.push(prevValue);
+
+        if (this.evaluateConditions(story)) {
+            story.getAttributeValue('entities').getValueForKey(entityID).attributes.editValueForKey(attributeName, prevValue.modify(op, newValue, newType).value, newType);
+        }
+    }
+
+    undo(story) {
+        let entityID = this.attributes.getValueForKey('entityID');
+        let attributeName = this.attributes.getValueForKey('attributeName');
+
+        const originalValue = this.undoStack.pop();
+        story.getAttributeValue('entities').getValueForKey(entityID).attributes.editValueForKey(attributeName, originalValue.value, originalValue.valueType);
+    }
+
+    addCondition(id, entityID, attributeName, opString, value) {
+        let condition = new SGCondition(id, entityID, attributeName, opString, value);
+        this.getAttributeValue('conditions').addValueForKey(id, condition, 'condition');
     }
 }
 
@@ -115,23 +230,26 @@ class Effect extends Entity {
  * Choice: an option with consequences
  **************************************************/
 
-class Choice extends Entity {
-    constructor(id, name, description, nextSceneID) {
-        super(id, name, 'choice');
-        this.setDescription(description);
-        this.nextSceneID = nextSceneID;
-        this.onSelectionEffects = [];
-        this.onRejectionEffects = [];
+class SGChoice extends SGEntity {
+    constructor(id, name, subtype, description, nextSceneID) {
+        super(id, name, 'choice', subtype, description);
+        this.addAdditionalDefaultAttributes(nextSceneID);
     }
 
-    addSelectionEffect(entity, attributeName, newValue, newType) {
-        let effect = new Effect(entity, attributeName, newValue, newType);
-        this.onSelectionEffects.push(effect);
+    addAdditionalDefaultAttributes(nextSceneID) {
+        this.attributes.addValueForKey('nextSceneID', nextSceneID, 'string');
+        this.attributes.addValueForKey('onSelectionEffects', new Array(), 'object');
+        this.attributes.addValueForKey('onRejectionEffects', new Array(), 'object');
     }
 
-    addRejectionEffect(entity, attributeName, newValue, newType) {
-        let effect = new Effect(entity, attributeName, newValue, newType);
-        this.onRejectionEffects.push(effect);
+    addSelectionEffect(id, entityID, attributeName, newValue, newType) {
+        let effect = new Effect(id, entityID, attributeName, newValue, newType);
+        this.attributes.getAttributeValue('onSelectionEffects').push(effect);
+    }
+
+    addRejectionEffect(id, entityID, attributeName, newValue, newType) {
+        let effect = new Effect(id, entityID, attributeName, newValue, newType);
+        this.attributes.getAttributeValue('onRejectionEffects').push(effect);
     }
 }
 
@@ -139,147 +257,174 @@ class Choice extends Entity {
  * Scene: A decision node in the story
  **************************************************/
 
-class Scene extends Entity {
-    constructor(id, name) {
-        super(id, name, 'scene');
-        this.choices = {};
-        this.onEntryEffects = [];
-        this.onExitEffects = [];
+class SGScene extends SGEntity {
+    constructor(id, name, subtype, description) {
+        super(id, name, 'scene', subtype, description);
+        this.addAdditionalDefaultAttributes();
     }
 
-    addChoice(choice) {
-        if (Object.keys(this.choices).includes(choice.id))
-            throw new Error("multiple choices with the same name are being created");
-    
-        this.choices[choice.id] = choice;
+    addAdditionalDefaultAttributes() {
+        this.attributes.addValueForKey('choices', new SGOrderedCollection('choice'), 'object');
+        this.attributes.addValueForKey('onEntryEffects', new SGOrderedCollection('effect'), 'object');
+        this.attributes.addValueForKey('onExitEffects', new SGOrderedCollection('effect'), 'object');
     }
 
-    editChoice(id, name, description, nextSceneID) {
-        if (!(Object.keys(this.choices).includes(id)))
-            throw new Error("choice to be edited does not exist");
-    
-        let choice = new Choice(id, name, description, nextSceneID);
-        this.choices[id] = choice;
-    }
-
-    removeChoice(id) {
-        if (!(Object.keys(this.choices).includes(id)))
-            throw new Error("choice to be deleted does not exist");
-    
-        delete this.choices[id]
+    addChoiceID(choiceID) {
+        this.getAttributeValue('choices').addValueForKey(choiceID, choiceID, 'string');
     }
 
     // performs all the entry effects
-    performEntryEffects() {
-        this.onEntryEffects.forEach(effect => { effect.perform(); });
+    performEntryEffects(story) {
+        let effects = this.getAttributeValue('onEntryEffects');
+        let effectKeys = effects.getKeys();
+
+        effectKeys.forEach(effectKey => { effects.getValueForKey(effectKey).perform(story); });
     }
 
     // undoes all the entry effects
-    undoEntryEffects() {
-        this.onEntryEffects.forEach(effect => { effect.undo(); });   
+    undoEntryEffects(story) {
+        let effects = this.getAttributeValue('onEntryEffects');
+        let effectKeys = effects.getKeys();
+
+        effectKeys.forEach(effectKey => { effects.getValueForKey(effectKey).undo(story); }); 
     }
 
     // performs all the exit effects
-    performExitEffects() {
-        this.onExitEffects.forEach(effect => { effect.perform(); });
+    performExitEffects(story) {
+        let effects = this.getAttributeValue('onExitEffects');
+        let effectKeys = effects.getKeys();
+
+        effectKeys.forEach(effectKey => { effects.getValueForKey(effectKey).perform(story); });
     }
 
     // undoes all the exit effects
-    undoExitEffects() {
-        this.onExitEffects.forEach(effect => { effect.undo(); });
+    undoExitEffects(story) {
+        let effects = this.getAttributeValue('onExitEffects');
+        let effectKeys = effects.getKeys();
+
+        effectKeys.forEach(effectKey => { effects.getValueForKey(effectKey).undo(story); });
     }
 
     // performs all the effects on choice selection
-    performOnChoiceSelectionEffects(selectedChoiceId) {
-        Object.keys(this.choices).forEach(choiceId => {
-            if (choiceId == selectedChoiceId)
-                this.choices[choiceId].onSelectionEffects.forEach(effect => { effect.perform(); });
+    performOnChoiceSelectionEffects(story, selectedChoiceID) {
+        this.getChoiceIDs().forEach(choiceID => {
+            if (choiceID == selectedChoiceID)
+                story.getChoice(choiceID).getAttributeValue('onSelectionEffects').forEach(effect => { effect.perform(story); });
             else
-                this.choices[choiceId].onRejectionEffects.forEach(effect => { effect.perform(); });
+                story.getChoice(choiceID).getAttributeValue('onSelectionEffects').forEach(effect => { effect.perform(story); });
         });
     }
 
     // undoes all the effects on choice selection
-    undoOnChoiceSelectionEffects(selectedChoiceId) {
-        Object.keys(this.choices).forEach(choiceId => {
-            if (choiceId == selectedChoiceId)
-                this.choices[choiceId].onSelectionEffects.forEach(effect => { effect.undo(); });
+    undoOnChoiceSelectionEffects(story, selectedChoiceID) {
+        this.getChoiceIDs().forEach(choiceID => {
+            if (choiceID == selectedChoiceID)
+                story.getChoice(choiceID).getAttributeValue('onSelectionEffects').forEach(effect => { effect.undo(); });
             else
-                this.choices[choiceId].onRejectionEffects.forEach(effect => { effect.undo(); });
+                story.getChoice(choiceID).getAttributeValue('onSelectionEffects').forEach(effect => { effect.undo(); });
         });
     }
 
     // undoes all the effects
-    undoAllEffects(selectedChoiceId) {
-        this.undoExitEffects();
-        this.undoOnChoiceSelectionEffects(selectedChoiceId);
-        this.undoEntryEffects();
-    }
-
-    // returns the corresponding choice for the given id
-    getChoice(id) {
-        if (!(Object.keys(this.choices).includes(id)))
-            throw new Error("choice to be fetched does not exist");
-    
-        return this.choices[id];
+    undoAllEffects(story, selectedChoiceId) {
+        this.undoExitEffects(story);
+        this.undoOnChoiceSelectionEffects(story, selectedChoiceId);
+        this.undoEntryEffects(story);
     }
 
     // returns an array of ids of all the choices of a particular scene
-    getChoiceIds() {
-        return Object.keys(this.choices);
+    getChoiceIDs() {
+        return this.getAttributeValue('choices').getKeys();
     }
 
-    addEntryEffect(entity, attributeName, newValue, newType) {
-        let effect = new Effect(entity, attributeName, newValue, newType);
-        this.onEntryEffects.push(effect);
+    addOnEntryEffect(id, entityID, attributeName, op, newValue, newType) {
+        let effect = new SGEffect(id, entityID, attributeName, op, newValue, newType);
+        this.getAttributeValue('onEntryEffects').addValueForKey(id, effect, 'effect');
     }
 
-    addExitEffect(entity, attributeName, newValue, newType) {
-        let effect = new Effect(entity, attributeName, newValue, newType);
-        this.onExitEffects.push(effect);
+    addOnExitEffect(id, entityID, attributeName, op, newValue, newType) {
+        let effect = new SGEffect(id, entityID, attributeName, op, newValue, newType);
+        this.getAttributeValue('onExitEffects').addValueForKey(id, effect, 'effect');
+    }
+
+    // returns the corresponding entry effect for the given id
+    getOnEntryEffect(effectID) {
+        if (!this.getAttributeValue('onEntryEffects').doesContainKey(effectID))
+            throw new Error("entry effect to be fetched does not exist");
+    
+        let entityObject = this.getAttributeValue('onEntryEffects').getValueObjectForKey(effectID);
+
+        if (entityObject.valueType !== 'effect')
+            throw new Error("effect ID sent doesn't correspond to a SGEffect object");
+
+        return entityObject.value;
+    }
+
+    // returns the corresponding exit effect for the given id
+    getOnExitEffect(effectID) {
+        if (!this.getAttributeValue('onExitEffects').doesContainKey(effectID))
+            throw new Error("exit effect to be fetched does not exist");
+    
+        let entityObject = this.getAttributeValue('onExitEffects').getValueObjectForKey(effectID);
+
+        if (entityObject.valueType !== 'effect')
+            throw new Error("effect ID sent doesn't correspond to a SGEffect object");
+
+        return entityObject.value;
     }
 }
 
 /**************************************************
- * Scene: A decision node in the story
+ * Story: collection of scenes
  **************************************************/
 
-class Story extends Entity {
-    constructor(id, name) {
-        super(id, name, 'story');
-        this.startSceneID = 'start';
-        this.scenes = {};
-        this.characters = [];
-        this.locations = [];
+class SGStory extends SGEntity {
+    constructor(id, name, subtype, description) {
+        super(id, name, 'story', subtype, description);
+        this.addAdditionalDefaultAttributes();
     }
 
-    addScene(scene) {
-        if (Object.keys(this.scenes).includes(scene.id))
-            throw new Error("multiple scenes with the same name are being stored");
-    
-        this.scenes[scene.id] = scene;
+    addAdditionalDefaultAttributes() {
+        this.attributes.addValueForKey('startSceneID', 'start', 'string');
+        this.attributes.addValueForKey('entities', new SGUnorderedCollection('entity'), 'object');
     }
 
-    editChoice(id, name, description, nextSceneID) {
-        if (!(Object.keys(this.scenes).includes(id)))
-            throw new Error("scene to be edited does not exist");
-    
-        let scene = new Scene(id, name, description, nextSceneID);
-        this.scenes[id] = scene;
+    // entity adders: add an entity into story
+    addScene(sceneID, name, subtype, description) {
+        let newScene = new SGScene(sceneID, name, subtype, description);
+        this.getAttributeValue('entities').addValueForKey(sceneID, newScene, 'scene');
     }
 
-    removeChoice(id) {
-        if (!(Object.keys(this.scene).includes(id)))
-            throw new Error("scene to be deleted does not exist");
-    
-        delete this.scenes[id]
+    addChoice(choiceID, name, subtype, description, forSceneID, nextSceneID) {
+        story.getScene(forSceneID).addChoiceID(choiceID);
+
+        let newChoice = new SGChoice(choiceID, name, subtype, description, nextSceneID);
+        this.getAttributeValue('entities').addValueForKey(choiceID, newChoice, 'choice');
     }
 
-    // returns the corresponding scene for the given id
-    getScene(id) {
-        if (!(Object.keys(this.scenes).includes(id)))
+    // entity getters: gets requested entity
+    getScene(sceneID) {
+        if (!this.getAttributeValue('entities').doesContainKey(sceneID))
             throw new Error("scene to be fetched does not exist");
     
-        return this.scenes[id];
+        let entityObject = this.getAttributeValue('entities').getValueObjectForKey(sceneID);
+
+        if (entityObject.valueType !== 'scene')
+            throw new Error("scene ID sent doesn't correspond to a SGScene object");
+
+        return entityObject.value;
+    }
+
+    // returns the corresponding choice for the given id
+    getChoice(choiceID) {
+        if (!this.getAttributeValue('entities').doesContainKey(choiceID))
+            throw new Error("choice to be fetched does not exist");
+    
+        let entityObject = this.getAttributeValue('entities').getValueObjectForKey(choiceID);
+
+        if (entityObject.valueType !== 'choice')
+            throw new Error("choice ID sent doesn't correspond to a SGChoice object");
+
+        return entityObject.value;
     }
 }

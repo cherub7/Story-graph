@@ -16,20 +16,20 @@ class Player {
         document.getElementById('redo_ref').innerHTML = `redo(${this.redoStack.length})`;
 
         const scene = this.story.getScene(sceneId);
-        document.getElementById('scene_desc').innerHTML = scene.description;
+        scene.performEntryEffects(this.story);
         
-        scene.performEntryEffects();
+        document.getElementById('scene_desc').innerHTML = scene.getAttributeValue('description');
 
         let choicesList = '';
-        let choiceIds = scene.getChoiceIds();
+        let choiceIds = scene.getChoiceIDs();
 
         if (choiceIds.length == 0) {
             choicesList += '\t<li><a href="javascript:player.stop();">...</a></li>\n';
         }
 
         choiceIds.forEach(choiceId => {
-            const choice = scene.getChoice(choiceId);
-            choicesList += `\t<li><a href="javascript:player.select('${choiceId}');">${choice.description}</a></li>\n`;
+            const choice = story.getChoice(choiceId);
+            choicesList += `\t<li><a href="javascript:player.select('${choiceId}');">${choice.getAttributeValue('description')}</a></li>\n`;
         });
 
         document.getElementById('choices_list').innerHTML = choicesList;
@@ -39,8 +39,8 @@ class Player {
     select(choiceId, isRedo) {
         let scene = this.story.getScene(this.currentSceneID);
 
-        scene.performOnChoiceSelectionEffects(choiceId);
-        scene.performExitEffects();
+        scene.performOnChoiceSelectionEffects(this.story, choiceId);
+        scene.performExitEffects(this.story);
 
         let record = {
             sceneId: this.currentSceneID,
@@ -52,10 +52,12 @@ class Player {
             this.redoStack = [];
         }
 
-        let choice = scene.getChoice(choiceId);
+        const choice = this.story.getChoice(choiceId);
 
-        if (choice.nextSceneID)
-            this.play(choice.nextSceneID);
+        const nextSceneID = choice.getAttributeValue('nextSceneID');
+        
+        if (nextSceneID)
+            this.play(nextSceneID);
         else
             this.stop();
     }
@@ -64,7 +66,7 @@ class Player {
         if (this.undoStack.length > 0) {
             // undo current scene's entry effects
             let scene = this.story.getScene(this.currentSceneID);
-            scene.undoEntryEffects();
+            scene.undoEntryEffects(this.story);
 
             // pull the history record
             let record = this.undoStack.pop();
@@ -74,7 +76,7 @@ class Player {
 
             // undo all previous effects
             let prevScene = this.story.getScene(record.sceneId);
-            prevScene.undoAllEffects(record.choiceId);
+            prevScene.undoAllEffects(this.story, record.choiceId);
 
             this.play(record.sceneId);
         }
