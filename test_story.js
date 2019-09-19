@@ -94,8 +94,8 @@ story.addScene('s9', 'guard', 'None',
 
 // battle
 story.addScene('s10', 'battle', 'None',
-                `The guard throws a old rusty sword at you. You pick it up and<br/>
-                You pray to gods to protect you and charge ahead!<br/>
+                `The guard throws a old rusty sword at you. You pick it up,<br/>
+                pray to gods to protect you and charge ahead!<br/>
                 <br/>
                 TO BE CONTINUED...`,
                 'string');
@@ -104,26 +104,30 @@ story.getScene('s9').attributes.addValueForKey('pleadCount', 0, 'number');
 
 // ----------(Effects)----------
 
-story.getScene('s9').addOnEntryEffect('eff90', 's9', 'pleadCount', '+', 1, 'number');
-story.getScene('s9').addOnEntryEffect('eff91', 's9', 'description', '=', 
-                                        `<b>Guard</b>:How many times should I say you? Go back!`,
-                                        'string');
-story.getScene('s9').addOnEntryEffect('eff92', 's9', 'description', '=', 
-                                        `<b>Guard</b>:Quiet! let's settle this with a duel...`, 
-                                        'string');
-story.getScene('s9').addOnEntryEffect('eff93', 'c91', 'description', '=', 
-                                        `Let's go!`, 
-                                        'string');
-story.getScene('s9').addOnEntryEffect('eff94', 'c91', 'nextSceneID', '=', 
-                                        's10', 
-                                        'string');
+story.addEffect('eff90', 's9', 'onEntryEffects', 's9', 'pleadCount', '+', 1, 'number');
+
+story.addEffect('eff91', 's9', 'onEntryEffects', 's9', 'description', '=', 
+                `<b>Guard</b>:How many times should I say you? Go back!`,
+                'string');
+
+story.addEffect('eff92', 's9', 'onEntryEffects', 's9', 'description', '=', 
+                `<b>Guard</b>:Quiet! let's settle this with a duel...`, 
+                'string');
+
+story.addEffect('eff93', 's9', 'onEntryEffects', 'c91', 'description', '=', `Let's go!`, 'string');
+
+story.addEffect('eff94', 's9', 'onEntryEffects', 'c91', 'nextSceneID', '=', 's10', 'string');
 
 // ----------(Conditions)----------
 
-story.getScene('s9').getOnEntryEffect('eff91').addCondition('cnd91', 's9', 'pleadCount', '<', 4);
-story.getScene('s9').getOnEntryEffect('eff92').addCondition('cnd92', 's9', 'pleadCount', '>=', 4);
-story.getScene('s9').getOnEntryEffect('eff93').addCondition('cnd93', 's9', 'pleadCount', '>=', 4);
-story.getScene('s9').getOnEntryEffect('eff94').addCondition('cnd94', 's9', 'pleadCount', '>=', 4);
+story.addCondition('cnd91', 'eff91', 's9', 'pleadCount', '>', 1);
+story.addCondition('cnd92', 'eff92', 's9', 'pleadCount', '>=', 4);
+story.addCondition('cnd93', 'eff93', 's9', 'pleadCount', '>=', 4);
+story.addCondition('cnd94', 'eff94', 's9', 'pleadCount', '>=', 4);
+
+// story.addCondition(id, effectID, entityID, attributeName, opString, value);
+// story.addCondition('cnd91', 'eff91', 's9', 'pleadCount', '>', 1);
+// should check that the type to which condition is added must be 'effect'
 
 // ----------(Choices)----------
 

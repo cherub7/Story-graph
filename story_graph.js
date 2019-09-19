@@ -160,7 +160,7 @@ class SGCondition extends SGEntity {
         const value = this.attributes.getValueForKey('value');
         
         // NOTE: if eval's performance is expensive, we can resort to using switch case
-        return eval(`${story.getAttributeValue('entities').getValueForKey(entityID).getAttributeValue(attributeName)} ${op} ${value};`);
+        return eval(`${story.getEntity(entityID).getAttributeValue(attributeName)} ${op} ${value};`);
     }
 }
 
@@ -182,16 +182,15 @@ class SGEffect extends SGEntity {
         this.attributes.addValueForKey('newValue', newValue, newType);
         this.attributes.addValueForKey('newType', newType, 'string');
 
-        this.attributes.addValueForKey('conditions', new SGUnorderedCollection('condition'), 'object');
+        this.attributes.addValueForKey('conditions', new SGUnorderedCollection('string'), 'object');
     }
 
     evaluateConditions(story) {
         let canPerform = true;
-        let conditions = this.attributes.getValueForKey('conditions');
-        let conditionIds = conditions.getKeys();
+        let conditionIDs = this.getConditionIDs();
 
-        conditionIds.forEach(conditionId => {
-            canPerform = (canPerform && conditions.getValueForKey(conditionId).evaluate(story));
+        conditionIDs.forEach(conditionID => {
+            canPerform = (canPerform && story.getCondition(conditionID).evaluate(story));
         });
 
         return canPerform;
@@ -204,11 +203,11 @@ class SGEffect extends SGEntity {
         let newValue = this.attributes.getValueForKey('newValue');
         let newType = this.attributes.getValueForKey('newType');
 
-        const prevValue = story.getAttributeValue('entities').getValueForKey(entityID).attributes.getValueObjectForKey(attributeName);
+        const prevValue = story.getEntity(entityID).attributes.getValueObjectForKey(attributeName);
         this.undoStack.push(prevValue);
 
         if (this.evaluateConditions(story)) {
-            story.getAttributeValue('entities').getValueForKey(entityID).attributes.editValueForKey(attributeName, prevValue.modify(op, newValue, newType).value, newType);
+            story.getEntity(entityID).attributes.editValueForKey(attributeName, prevValue.modify(op, newValue, newType).value, newType);
         }
     }
 
@@ -217,12 +216,15 @@ class SGEffect extends SGEntity {
         let attributeName = this.attributes.getValueForKey('attributeName');
 
         const originalValue = this.undoStack.pop();
-        story.getAttributeValue('entities').getValueForKey(entityID).attributes.editValueForKey(attributeName, originalValue.value, originalValue.valueType);
+        story.getEntity(entityID).attributes.editValueForKey(attributeName, originalValue.value, originalValue.valueType);
     }
 
-    addCondition(id, entityID, attributeName, opString, value) {
-        let condition = new SGCondition(id, entityID, attributeName, opString, value);
-        this.getAttributeValue('conditions').addValueForKey(id, condition, 'condition');
+    addConditionID(conditionID) {
+        this.getAttributeValue('conditions').addValueForKey(conditionID, conditionID, 'string');
+    }
+
+    getConditionIDs() {
+        return this.getAttributeValue('conditions').getKeys();
     }
 }
 
@@ -238,18 +240,20 @@ class SGChoice extends SGEntity {
 
     addAdditionalDefaultAttributes(nextSceneID) {
         this.attributes.addValueForKey('nextSceneID', nextSceneID, 'string');
-        this.attributes.addValueForKey('onSelectionEffects', new Array(), 'object');
-        this.attributes.addValueForKey('onRejectionEffects', new Array(), 'object');
+        this.attributes.addValueForKey('onSelectionEffects', new SGOrderedCollection('string'), 'object');
+        this.attributes.addValueForKey('onRejectionEffects', new SGOrderedCollection('string'), 'object');
     }
 
-    addSelectionEffect(id, entityID, attributeName, newValue, newType) {
-        let effect = new Effect(id, entityID, attributeName, newValue, newType);
-        this.attributes.getAttributeValue('onSelectionEffects').push(effect);
+    addEffectID(effectID, effectTypeName) {
+        this.getAttributeValue(effectTypeName).addValueForKey(effectID, effectID, 'string');
     }
 
-    addRejectionEffect(id, entityID, attributeName, newValue, newType) {
-        let effect = new Effect(id, entityID, attributeName, newValue, newType);
-        this.attributes.getAttributeValue('onRejectionEffects').push(effect);
+    getOnSelectionEffectIDs() {
+        return this.getAttributeValue('onSelectionEffects').getKeys();
+    }
+
+    getOnRejectionEffectIDs() {
+        return this.getAttributeValue('onRejectionEffects').getKeys();
     }
 }
 
@@ -265,53 +269,49 @@ class SGScene extends SGEntity {
 
     addAdditionalDefaultAttributes() {
         this.attributes.addValueForKey('choices', new SGOrderedCollection('choice'), 'object');
-        this.attributes.addValueForKey('onEntryEffects', new SGOrderedCollection('effect'), 'object');
-        this.attributes.addValueForKey('onExitEffects', new SGOrderedCollection('effect'), 'object');
+        this.attributes.addValueForKey('onEntryEffects', new SGOrderedCollection('string'), 'object');
+        this.attributes.addValueForKey('onExitEffects', new SGOrderedCollection('string'), 'object');
     }
 
     addChoiceID(choiceID) {
         this.getAttributeValue('choices').addValueForKey(choiceID, choiceID, 'string');
     }
 
+    addEffectID(effectID, effectTypeName) {
+        this.getAttributeValue(effectTypeName).addValueForKey(effectID, effectID, 'string');
+    }
+
     // performs all the entry effects
     performEntryEffects(story) {
-        let effects = this.getAttributeValue('onEntryEffects');
-        let effectKeys = effects.getKeys();
-
-        effectKeys.forEach(effectKey => { effects.getValueForKey(effectKey).perform(story); });
+        let effectIDs = this.getOnEntryEffectIDs();
+        effectIDs.forEach(effectID => { story.getEffect(effectID).perform(story); });
     }
 
     // undoes all the entry effects
     undoEntryEffects(story) {
-        let effects = this.getAttributeValue('onEntryEffects');
-        let effectKeys = effects.getKeys();
-
-        effectKeys.forEach(effectKey => { effects.getValueForKey(effectKey).undo(story); }); 
+        let effectIDs = this.getOnEntryEffectIDs();
+        effectIDs.forEach(effectID => { story.getEffect(effectID).undo(story); });
     }
 
     // performs all the exit effects
     performExitEffects(story) {
-        let effects = this.getAttributeValue('onExitEffects');
-        let effectKeys = effects.getKeys();
-
-        effectKeys.forEach(effectKey => { effects.getValueForKey(effectKey).perform(story); });
+        let effectIDs = this.getOnExitEffectIDs();
+        effectIDs.forEach(effectID => { story.getEffect(effectID).perform(story); });
     }
 
     // undoes all the exit effects
     undoExitEffects(story) {
-        let effects = this.getAttributeValue('onExitEffects');
-        let effectKeys = effects.getKeys();
-
-        effectKeys.forEach(effectKey => { effects.getValueForKey(effectKey).undo(story); });
+        let effectIDs = this.getOnExitEffectIDs();
+        effectIDs.forEach(effectID => { story.getEffect(effectID).undo(story); });
     }
 
     // performs all the effects on choice selection
     performOnChoiceSelectionEffects(story, selectedChoiceID) {
         this.getChoiceIDs().forEach(choiceID => {
             if (choiceID == selectedChoiceID)
-                story.getChoice(choiceID).getAttributeValue('onSelectionEffects').forEach(effect => { effect.perform(story); });
+                story.getChoice(choiceID).getOnSelectionEffectIDs().forEach(effectID => { story.getEffect(effectID).perform(story); });
             else
-                story.getChoice(choiceID).getAttributeValue('onSelectionEffects').forEach(effect => { effect.perform(story); });
+                story.getChoice(choiceID).getOnRejectionEffectIDs().forEach(effectID => { story.getEffect(effectID).perform(story); });
         });
     }
 
@@ -319,9 +319,9 @@ class SGScene extends SGEntity {
     undoOnChoiceSelectionEffects(story, selectedChoiceID) {
         this.getChoiceIDs().forEach(choiceID => {
             if (choiceID == selectedChoiceID)
-                story.getChoice(choiceID).getAttributeValue('onSelectionEffects').forEach(effect => { effect.undo(); });
+                story.getChoice(choiceID).getOnSelectionEffectIDs().forEach(effectID => { story.getEffect(effectID).undo(story); });
             else
-                story.getChoice(choiceID).getAttributeValue('onSelectionEffects').forEach(effect => { effect.undo(); });
+                story.getChoice(choiceID).getOnRejectionEffectIDs().forEach(effectID => { story.getEffect(effectID).undo(story); });
         });
     }
 
@@ -332,45 +332,19 @@ class SGScene extends SGEntity {
         this.undoEntryEffects(story);
     }
 
-    // returns an array of ids of all the choices of a particular scene
+    // returns an array of ids of all the choices of this scene
     getChoiceIDs() {
         return this.getAttributeValue('choices').getKeys();
     }
 
-    addOnEntryEffect(id, entityID, attributeName, op, newValue, newType) {
-        let effect = new SGEffect(id, entityID, attributeName, op, newValue, newType);
-        this.getAttributeValue('onEntryEffects').addValueForKey(id, effect, 'effect');
+    // returns an array of ids of all the onEntryEffects of this scene
+    getOnEntryEffectIDs() {
+        return this.getAttributeValue('onEntryEffects').getKeys();
     }
 
-    addOnExitEffect(id, entityID, attributeName, op, newValue, newType) {
-        let effect = new SGEffect(id, entityID, attributeName, op, newValue, newType);
-        this.getAttributeValue('onExitEffects').addValueForKey(id, effect, 'effect');
-    }
-
-    // returns the corresponding entry effect for the given id
-    getOnEntryEffect(effectID) {
-        if (!this.getAttributeValue('onEntryEffects').doesContainKey(effectID))
-            throw new Error("entry effect to be fetched does not exist");
-    
-        let entityObject = this.getAttributeValue('onEntryEffects').getValueObjectForKey(effectID);
-
-        if (entityObject.valueType !== 'effect')
-            throw new Error("effect ID sent doesn't correspond to a SGEffect object");
-
-        return entityObject.value;
-    }
-
-    // returns the corresponding exit effect for the given id
-    getOnExitEffect(effectID) {
-        if (!this.getAttributeValue('onExitEffects').doesContainKey(effectID))
-            throw new Error("exit effect to be fetched does not exist");
-    
-        let entityObject = this.getAttributeValue('onExitEffects').getValueObjectForKey(effectID);
-
-        if (entityObject.valueType !== 'effect')
-            throw new Error("effect ID sent doesn't correspond to a SGEffect object");
-
-        return entityObject.value;
+    // returns an array of ids of all the onExitEffects of this scene
+    getOnExitEffectIDs() {
+        return this.getAttributeValue('onExitEffects').getKeys();
     }
 }
 
@@ -402,29 +376,50 @@ class SGStory extends SGEntity {
         this.getAttributeValue('entities').addValueForKey(choiceID, newChoice, 'choice');
     }
 
-    // entity getters: gets requested entity
-    getScene(sceneID) {
-        if (!this.getAttributeValue('entities').doesContainKey(sceneID))
-            throw new Error("scene to be fetched does not exist");
-    
-        let entityObject = this.getAttributeValue('entities').getValueObjectForKey(sceneID);
+    addEffect(effectID, effectedEntityID, effectTypeName, entityID, attributeName, op, newValue, newType) {
+        let entity = this.getEntity(effectedEntityID);
 
-        if (entityObject.valueType !== 'scene')
-            throw new Error("scene ID sent doesn't correspond to a SGScene object");
+        entity.addEffectID(effectID, effectTypeName);
+
+        let newEffect = new SGEffect(effectID, entityID, attributeName, op, newValue, newType);
+        this.getAttributeValue('entities').addValueForKey(effectID, newEffect, 'effect');
+    }
+
+    addCondition(conditionID, effectID, entityID, attributeName, opString, value) {
+        let effect = this.getEffect(effectID);
+
+        effect.addConditionID(conditionID);
+
+        let newCondition = new SGCondition(conditionID, entityID, attributeName, opString, value);
+        this.getAttributeValue('entities').addValueForKey(conditionID, newCondition, 'condition');
+    }
+
+    // entity getters: gets requested entity
+    getEntity(entityID, requiredType='None') {
+        if (!this.getAttributeValue('entities').doesContainKey(entityID))
+            throw new Error("entity to be fetched does not exist");
+
+        let entityObject = this.getAttributeValue('entities').getValueObjectForKey(entityID);
+
+        if (requiredType !== 'None' && entityObject.valueType !== requiredType)
+            throw new Error(`entity is of the type ${entityObject.valueType} but you require entity of type ${requiredType}`);
 
         return entityObject.value;
     }
 
-    // returns the corresponding choice for the given id
+    getScene(sceneID) {
+        return this.getEntity(sceneID, 'scene');
+    }
+
     getChoice(choiceID) {
-        if (!this.getAttributeValue('entities').doesContainKey(choiceID))
-            throw new Error("choice to be fetched does not exist");
-    
-        let entityObject = this.getAttributeValue('entities').getValueObjectForKey(choiceID);
+        return this.getEntity(choiceID, 'choice');
+    }
 
-        if (entityObject.valueType !== 'choice')
-            throw new Error("choice ID sent doesn't correspond to a SGChoice object");
+    getEffect(effectID) {
+        return this.getEntity(effectID, 'effect');
+    }
 
-        return entityObject.value;
+    getCondition(conditionID) {
+        return this.getEntity(conditionID, 'condition');
     }
 }
