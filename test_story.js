@@ -7,7 +7,8 @@ let story = new SGStory('test_story', 'Mortal Choice');
 story.addScene('start', 'welcome note', 'None', 
                 `This is a simple text story created using <b><a href="https://github.com/cherub7/story-graph">Story Graph</a></b>.<br/>
                 <b>Story Graph</b> is a tool to build and play your stories.<br/>
-                It is still in development. For now enjoy this game :)`,
+                It is still in development. For now enjoy this game :)<br/><br/>
+                Here's a sneak peek of <b><a href="../create_story.html">UI builder</a></b> (still in construction)<br/>`,
                 'string');
 
 // man before king
@@ -92,6 +93,9 @@ story.addScene('s9', 'guard', 'None',
                 accessed by the royal family. GET BACK!!<br/>`,
                 'string');
 
+// TODO: simplify addAttribute method
+story.getScene('s9').attributes.addValueForKey('pleadCount', 0, 'number');
+
 // battle
 story.addScene('s10', 'battle', 'None',
                 `The guard throws a old rusty sword at you. You pick it up,<br/>
@@ -99,8 +103,6 @@ story.addScene('s10', 'battle', 'None',
                 <br/>
                 TO BE CONTINUED...`,
                 'string');
-
-story.getScene('s9').attributes.addValueForKey('pleadCount', 0, 'number');
 
 // ----------(Effects)----------
 
@@ -124,10 +126,6 @@ story.addCondition('cnd91', 'eff91', 's9', 'pleadCount', '>', 1);
 story.addCondition('cnd92', 'eff92', 's9', 'pleadCount', '>=', 4);
 story.addCondition('cnd93', 'eff93', 's9', 'pleadCount', '>=', 4);
 story.addCondition('cnd94', 'eff94', 's9', 'pleadCount', '>=', 4);
-
-// story.addCondition(id, effectID, entityID, attributeName, opString, value);
-// story.addCondition('cnd91', 'eff91', 's9', 'pleadCount', '>', 1);
-// should check that the type to which condition is added must be 'effect'
 
 // ----------(Choices)----------
 

@@ -5,84 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
-    <script>
-        function remove(id) {
-            // testing 1 2 3....
-        }
-
-        function toggleEdit(id) {
-            let element = document.getElementById(id);
-            let button = document.getElementById("toggle_edit_button_" + id);
-
-            let fields = ['id', 'name', 'type'];
-            let isReadOnly = document.getElementById('id_' + id).readOnly;
-
-            if (isReadOnly) {
-                button.innerText = "= save";
-            }
-            else {
-                button.innerText = "~ edit";
-            }
-
-            fields.forEach(field => {
-                let field_id = field + '_' + id;
-                document.getElementById(field_id).readOnly = !isReadOnly;
-            });
-        }
-
-        function toggleView(id) {
-            let element = document.getElementById(id);
-            let button = document.getElementById("toggle_view_button_" + id);
-            
-            if (element.hidden) {
-                element.hidden = false;
-                button.innerText = "< collapse";
-            }
-            else {
-                element.hidden = true;
-                button.innerText = "> expand";
-            }
-        }        
-    </script>
 </head>
 <body>
-    <!--testing out components-->
-    <div 
-        class="story_element"
-        style="width: 80%;"
-    >
-        <div 
-            class="top_bar"
-            style=" width: 100%; 
-                    border: 1px solid black;
-                    text-align: center;"
-        >
-            <div style="width: 30%; display:inline-block;"><b>id</b>: <input id="id_test" type="text"></div>
-            <div style="width: 30%; display:inline-block;"><b>Name</b>: <input id="name_test" type="text"></div>
-            <div style="width: 30%; display:inline-block;"><b>type</b>: <input id="type_test" type="text"></div>
+    <center>
+        <div id="playArea">
         </div>
 
-        <div
-            class="content"
-            id="test"
-            style=" width: 100%;
-                    border: 1px solid black;
-                    text-align: center;
-                    height:auto;"
-        >
-            item's properties
-        </div>
-        
-        <div 
-            class="bottom_bar"
-            style=" width: 100%; 
-                    border: 1px solid black;
-                    text-align: center;"
-        >
-            <div style="width: 30%; display:inline-block;"><a href="javascript:remove('test');">- delete</a></div>
-            <div style="width: 30%; display:inline-block;"><a id="toggle_edit_button_test" href="javascript:toggleEdit('test');">= save</a></div>
-            <div style="width: 30%; display:inline-block;"><a id="toggle_view_button_test" href="javascript:toggleView('test');">< collapse</a></div>
-        </div>
-    </div>
+        <button onclick="javascript:creator.generateScript()">generate story</button>
+        <button onclick='javascript:window.location.href = "../";'>go back to sample story</button>
+    </center>
+
+    <script src="create_story.js"></script>
+    <script>
+        creator.createElement('story', 'playArea', -1);
+    </script>
 </body>
 </html>

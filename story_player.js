@@ -1,5 +1,5 @@
 
-class Player {
+class SGPlayer {
     constructor(story) {
         this.story = story;
         this.currentSceneID = 'start';
@@ -105,4 +105,4 @@ class Player {
     }
 }
 
-player = new Player(story);
+player = new SGPlayer(story);
