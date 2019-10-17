@@ -1,4 +1,4 @@
-let story = new SGStory('test_story', 'Mortal Choice');
+let story = new SGStory('test_story', 'Mortal Choice', 'None', 'test story');
 
 // ----------(Scenes)----------
 
@@ -8,7 +8,7 @@ story.addScene('start', 'welcome note', 'None',
                 `This is a simple text story created using <b><a href="https://github.com/cherub7/story-graph">Story Graph</a></b>.<br/>
                 <b>Story Graph</b> is a tool to build and play your stories.<br/>
                 It is still in development. For now enjoy this game :)<br/><br/>
-                Here's a sneak peek of <b><a href="../create_story.html">UI builder</a></b> (still in construction)<br/>`,
+                Here's a sneak peek of <b><a href="create_story.html">UI builder</a></b> (still in construction)<br/>`,
                 'string');
 
 // man before king

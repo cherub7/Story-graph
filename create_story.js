@@ -48,34 +48,85 @@ class SGUIEntity {
     getStoryScript() {
         const entityID = document.getElementById('id'+'-'+this.uid).children[1].value;
         const name = document.getElementById('name'+'-'+this.uid).children[1].value;
+        const subType = 'None';
+        const description = 'None'
 
-        let script = `let story = new SGStory('${entityID}', '${name}');`;
+        let script = `let story = new SGStory('${entityID}', '${name}', '${subType}', '${description}');`;
 
         return script;
     }
 
     getSceneScript() {
-        const entityID = document.getElementById('id'+'-'+this.uid).children[1].value;
+        const sceneID = document.getElementById('id'+'-'+this.uid).children[1].value;
         const name = document.getElementById('name'+'-'+this.uid).children[1].value;
         const subType = 'None';
-        const description = document.getElementById('description'+'-'+this.uid).children[1].value;
+        const description = 'None';
         const valuType = 'string';
 
-        let script = `story.addScene('${entityID}', '${name}', '${subType}', '${description}', '${valuType}');`;
+        let script = `story.addScene('${sceneID}', '${name}', '${subType}', '${description}', '${valuType}');`;
 
         return script;
     }
 
     getChoiceScript() {
-        return '// coming soon...';
+        const choiceID = document.getElementById('id'+'-'+this.uid).children[1].value;
+        const name = document.getElementById('name'+'-'+this.uid).children[1].value;
+        const subType = 'None';
+        const description = document.getElementById('description'+'-'+this.uid).children[1].value;
+        const parentID = document.getElementById('id'+'-'+this.parent_uid).children[1].value;
+        const nextSceneID = document.getElementById('next scene id'+'-'+this.uid).children[1].value;
+
+        let script = `story.addChoice('${choiceID}', '${name}', '${subType}', '${description}', '${parentID}', '${nextSceneID}');`;
+
+        return script;
     }
 
     getEffectScript() {
-        return '// coming soon...';
+        let effectType = document.getElementById(this.uid).parentElement.parentElement.id;
+        const endIndex = effectType.indexOf('-');
+
+        effectType = effectType.substring(0, endIndex);
+        let effectTypeArg = '';
+
+        switch (effectType) {
+            case 'entry effect':
+                effectTypeArg = 'onEntryEffects';
+                break;
+            case 'exit effect':
+                effectTypeArg = 'onExitEffects';
+                break;
+            case 'selection effect':
+                effectTypeArg = 'onSelectionEffects';
+                break;
+            case 'rejection effect':
+                effectTypeArg = 'onRejectionEffects';
+                break;
+        }
+
+        const effectID = document.getElementById('id'+'-'+this.uid).children[1].value;
+        const parentID = document.getElementById('id'+'-'+this.parent_uid).children[1].value;
+        const entityID = document.getElementById('entityID'+'-'+this.uid).children[1].value;
+        const attributeName = document.getElementById('attributeName'+'-'+this.uid).children[1].value;
+        const op = document.getElementById('op'+'-'+this.uid).children[1].value;
+        const newValue = document.getElementById('newValue'+'-'+this.uid).children[1].value;
+        const newType = document.getElementById('newType'+'-'+this.uid).children[1].value;
+
+        let script = `story.addEffect('${effectID}', '${parentID}', '${effectTypeArg}', '${entityID}', '${attributeName}', '${op}', ${newValue}, '${newType}');`;
+
+        return script;
     }
 
     getConditionScript() {
-        return '// coming soon...';
+        const conditionID = document.getElementById('id'+'-'+this.uid).children[1].value;
+        const parentID = document.getElementById('id'+'-'+this.parent_uid).children[1].value;
+        const entityID = document.getElementById('entityID'+'-'+this.uid).children[1].value;
+        const attributeName = document.getElementById('attributeName'+'-'+this.uid).children[1].value;
+        const op = document.getElementById('op'+'-'+this.uid).children[1].value;
+        const value = document.getElementById('newValue'+'-'+this.uid).children[1].value;
+    
+        let script = `story.addCondition('${conditionID}', '${parentID}', '${entityID}', '${attributeName}', '${op}', ${value});`;
+
+        return script;
     }
 }
 
@@ -91,21 +142,19 @@ class SGCreator {
             'options-panel':{
                 type:'options-panel',
             },
-            primary:{
-                id: 'text',
-                name: 'text',
-                // 'sub-type':'text',
-                description:'multi-text',
-                'add#1':{
-                    name:'attribute',
-                    type:'attribute',
-                },
-            },
             attribute:{
                 'value':'text',
                 'type':'text',
             },
             story:{
+                id: 'text',
+                name: 'text',
+                // 'sub-type': 'text',
+                // description: 'multi-text',
+                'add#0':{
+                    name:'attribute',
+                    type:'attribute',
+                },
                 'add#1':{
                     name:'scene',
                     type:'scene',
@@ -113,6 +162,14 @@ class SGCreator {
                 // TODO: add entities and attributes into story
             },
             scene:{
+                id: 'text',
+                name: 'text',
+                // 'sub-type': 'text',
+                // description:'multi-text',
+                'add#0':{
+                    name:'attribute',
+                    type:'attribute',
+                },
                 'add#1':{
                     name:'choice',
                     type:'choice',
@@ -127,6 +184,14 @@ class SGCreator {
                 },
             },
             choice:{
+                id: 'text',
+                name: 'text',
+                // 'sub-type': 'text',
+                description:'multi-text',
+                'add#0':{
+                    name:'attribute',
+                    type:'attribute',
+                },
                 'next scene id':'text',
                 'add#1':{
                     name:'selection effect',
@@ -138,6 +203,7 @@ class SGCreator {
                 },
             },
             effect:{
+                id: 'text',
                 entityID:'text',
                 attributeName:'text',
                 op:'text',
@@ -149,6 +215,7 @@ class SGCreator {
                 },
             },
             condition:{
+                id: 'text',
                 entityID:'text',
                 attributeName:'text',
                 op:'text',
@@ -169,11 +236,10 @@ class SGCreator {
         return uid;
     }
 
-    // TODO: go with decorative pattern?
+    // TODO: go with decorative pattern? (later)
     // TODO: create a parent story element with default start node
     // TODO: story element must be a book
     // TODO: break the large methods in this class
-    // TODO: script generation
 
     // creator methods:
 
@@ -189,9 +255,6 @@ class SGCreator {
 
         let contentPanel = document.createElement('div');
         contentPanel.id = 'content' + '-' + uid;
-        if (type !== 'attribute') {
-            this.appendDivs(contentPanel, uid, 'primary');
-        }
         this.appendDivs(contentPanel, uid, type);
 
         element.appendChild(optionsPanel);
