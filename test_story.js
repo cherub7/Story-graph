@@ -93,8 +93,7 @@ story.addScene('s9', 'guard', 'None',
                 accessed by the royal family. GET BACK!!<br/>`,
                 'string');
 
-// TODO: simplify addAttribute method
-story.getScene('s9').attributes.addValueForKey('pleadCount', 0, 'number');
+story.addAttribute('s9', 'pleadCount', 0, 'number');
 
 // battle
 story.addScene('s10', 'battle', 'None',

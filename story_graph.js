@@ -364,6 +364,11 @@ class SGStory extends SGEntity {
     }
 
     // entity adders: add an entity into story
+    addAttribute(entityID, attributeName, value, type) {
+        let entity = this.getEntity(entityID, 'None');
+        entity.attributes.addValueForKey(attributeName, value, type);
+    }
+
     addScene(sceneID, name, subtype, description) {
         let newScene = new SGScene(sceneID, name, subtype, description);
         this.getAttributeValue('entities').addValueForKey(sceneID, newScene, 'scene');

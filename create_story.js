@@ -42,7 +42,14 @@ class SGUIEntity {
     }
 
     getAttributeScript() {
-        return '// coming soon...';
+        const entityID = document.getElementById('id'+'-'+this.parent_uid).children[1].value;
+        const name = document.getElementById('name'+'-'+this.uid).children[1].value;
+        const value = document.getElementById('value'+'-'+this.uid).children[1].value;
+        const type = document.getElementById('type'+'-'+this.uid).children[1].value;
+
+        let script = `story.addAttribute('${entityID}', '${name}', ${value}, '${type}');`;
+
+        return script;
     }
 
     getStoryScript() {
@@ -143,8 +150,9 @@ class SGCreator {
                 type:'options-panel',
             },
             attribute:{
-                'value':'text',
-                'type':'text',
+                name: 'text',
+                value: 'text',
+                type: 'text',
             },
             story:{
                 id: 'text',
@@ -228,6 +236,9 @@ class SGCreator {
 
         // the mapping to store elements mapped to their html unique div id's
         this.elementPool = {};
+
+        // the map to store children present under each element
+        this.childrenOf = {};
     }
 
     getUID() {
@@ -261,6 +272,12 @@ class SGCreator {
         element.appendChild(contentPanel);
         
         let elementObj = new SGUIEntity(type, uid, parent_uid);
+
+        // add entity to the child pool
+        if (this.childrenOf[parent_uid] === undefined)
+            this.childrenOf[parent_uid] = [];
+        
+        this.childrenOf[parent_uid].push(uid);
 
         // styling
         element.style.width = '90%';
@@ -317,11 +334,13 @@ class SGCreator {
                     let deleteButton = document.createElement('button');
                     deleteButton.textContent = 'x delete';
                     deleteButton.onclick = function() {
-                        document.getElementById(uid).remove();
-                        
-                        // TODO: delete all children also (maintain parent chain?)
-                        
-                        delete creator.elementPool[uid];
+                        // remove the element as child of its parent
+                        let parent_uid = creator.elementPool[uid].parent_uid;
+                        let index = creator.childrenOf[parent_uid].indexOf(uid);
+                        creator.childrenOf[parent_uid].splice(index, 1);
+
+                        // remove all the element's children
+                        creator.deleteElement(uid);
                     }
 
                     deleteButton.style.margin = '5px';
@@ -410,8 +429,26 @@ class SGCreator {
     }
 
     generateScript() {
-        // TODO: come up with a strategy to generate script
+        // strategy: story > scenes > choices > effects > conditions > attributes
+        // TODO: go over element pool type by type and print them somewhere
+        // TODO: somehow feed this script to a SGPlayer instance
         alert("coming soon!");
+    }
+
+    // recursively deletes all the children element when the parent element is deleted
+    deleteElement(uid) {
+        let children = this.childrenOf[uid];
+
+        if (children !== undefined) {
+            children.forEach(child => {
+                this.deleteElement(child);
+            });
+
+            delete this.childrenOf[uid];
+        }
+                        
+        document.getElementById(uid).remove();
+        delete this.elementPool[uid];
     }
 }
 
