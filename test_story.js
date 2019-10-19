@@ -7,7 +7,7 @@ let story = new SGStory('test_story', 'Mortal Choice', 'None', 'test story');
 story.addScene('start', 'welcome note', 'None', 
                 `This is a simple text story created using <b><a href="https://github.com/cherub7/story-graph">Story Graph</a></b>.<br/>
                 <b>Story Graph</b> is a tool to build and play your stories.<br/>
-                It is still in development. For now enjoy this game :)<br/><br/>
+                It is still in development.<br/><br/>
                 <li> BUILD and save your story using <b><a href="create_story.html">UI builder</a></b> (still in construction)<br/>
                 <li> LOAD and play your <a href="javascript:player.load();">saved story</a><br/>`,
                 'string');
@@ -129,7 +129,7 @@ story.addCondition('cnd94', 'eff94', 's9', 'pleadCount', '>=', 4);
 
 // ----------(Choices)----------
 
-story.addChoice('c00', 'onward', 'None', 'A Mortal Choice', 'start', 's1');
+story.addChoice('c00', 'onward', 'None', 'Sample story: A Mortal Choice', 'start', 's1');
 
 story.addChoice('c10', 'yes', 'None', 'Yes my lord... Please forgive me!', 's1', 's2');
 story.addChoice('c11', 'no', 'None', 'No my lord! I\'m innocent!', 's1', 's3');

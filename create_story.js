@@ -58,7 +58,7 @@ class SGUIEntity {
         const subType = 'None';
         const description = 'None'
 
-        let script = `let story = new SGStory('${entityID}', '${name}', '${subType}', '${description}');`;
+        let script = `story = new SGStory('${entityID}', '${name}', '${subType}', '${description}');`;
 
         return script;
     }
