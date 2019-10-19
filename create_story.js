@@ -67,7 +67,7 @@ class SGUIEntity {
         const sceneID = document.getElementById('id'+'-'+this.uid).children[1].value;
         const name = document.getElementById('name'+'-'+this.uid).children[1].value;
         const subType = 'None';
-        const description = 'None';
+        const description = document.getElementById('description'+'-'+this.uid).children[1].value;
         const valuType = 'string';
 
         let script = `story.addScene('${sceneID}', '${name}', '${subType}', '${description}', '${valuType}');`;
@@ -173,7 +173,7 @@ class SGCreator {
                 id: 'text',
                 name: 'text',
                 // 'sub-type': 'text',
-                // description:'multi-text',
+                description:'multi-text',
                 'add#0':{
                     name:'attribute',
                     type:'attribute',
@@ -429,10 +429,38 @@ class SGCreator {
     }
 
     generateScript() {
-        // strategy: story > scenes > choices > effects > conditions > attributes
-        // TODO: go over element pool type by type and print them somewhere
-        // TODO: somehow feed this script to a SGPlayer instance
-        alert("coming soon!");
+        const max_uid = this.getUID();
+        let typePool = {};
+
+        for (var uid = 0; uid < max_uid; uid++) {
+            let element = this.elementPool[uid];
+
+            if (element !== undefined) {
+                let type = element.type;
+
+                if (typePool[type] === undefined)
+                    typePool[type] = [];
+
+                typePool[type].push(uid);
+            }
+        }
+
+        const build_sequence = ['story', 'scene', 'choice', 'effect', 'condition', 'attribute'];
+        let script = '';
+
+        build_sequence.forEach(type => {
+            script += `\n\n// -----( ${type} )-----\n\n`;
+
+            let componentIDs = typePool[type];
+            if (componentIDs !== undefined) {
+                componentIDs.forEach(componentID => {
+                    let componentScript = this.elementPool[componentID].getScript();
+                    script += `${componentScript}\n\n`;
+                });
+            }
+        });
+
+        return script;
     }
 
     // recursively deletes all the children element when the parent element is deleted
@@ -452,5 +480,12 @@ class SGCreator {
     }
 }
 
+function saveScript() {
+    const script = creator.generateScript();
+    // store the script into localStorage
+    localStorage.setItem('SGScript', script);
+}
+
+// TODO: remove handlers from js files (not necessarily this one)
 // handle to be used by create_story page
 let creator = new SGCreator();

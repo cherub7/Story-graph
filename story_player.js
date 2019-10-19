@@ -28,7 +28,7 @@ class SGPlayer {
         }
 
         choiceIds.forEach(choiceId => {
-            const choice = story.getChoice(choiceId);
+            const choice = this.story.getChoice(choiceId);
             choicesList += `\t<li><a href="javascript:player.select('${choiceId}');">${choice.getAttributeValue('description')}</a></li>\n`;
         });
 
@@ -102,6 +102,25 @@ class SGPlayer {
     stop() {
         document.getElementById('scene_desc').innerText = 'THE END';
         document.getElementById('choices_list').innerHTML = '';
+    }
+
+    change(story) {
+        this.reset();
+        this.story = story;
+        this.play('start');
+    }
+
+    // loads story from script stored in localStory
+    load() {
+        let script = localStorage.getItem('SGScript');
+        
+        if (script !== null) {
+            eval(script);
+            this.change(story);
+        }
+        else {
+            alert("No saved script found.");
+        }
     }
 }
 

@@ -375,7 +375,7 @@ class SGStory extends SGEntity {
     }
 
     addChoice(choiceID, name, subtype, description, forSceneID, nextSceneID) {
-        story.getScene(forSceneID).addChoiceID(choiceID);
+        this.getScene(forSceneID).addChoiceID(choiceID);
 
         let newChoice = new SGChoice(choiceID, name, subtype, description, nextSceneID);
         this.getAttributeValue('entities').addValueForKey(choiceID, newChoice, 'choice');

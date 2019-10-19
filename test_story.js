@@ -8,7 +8,8 @@ story.addScene('start', 'welcome note', 'None',
                 `This is a simple text story created using <b><a href="https://github.com/cherub7/story-graph">Story Graph</a></b>.<br/>
                 <b>Story Graph</b> is a tool to build and play your stories.<br/>
                 It is still in development. For now enjoy this game :)<br/><br/>
-                Here's a sneak peek of <b><a href="create_story.html">UI builder</a></b> (still in construction)<br/>`,
+                <li> BUILD and save your story using <b><a href="create_story.html">UI builder</a></b> (still in construction)<br/>
+                <li> LOAD and play your <a href="javascript:player.load();">saved story</a><br/>`,
                 'string');
 
 // man before king
