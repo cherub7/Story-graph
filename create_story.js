@@ -129,7 +129,7 @@ class SGUIEntity {
         const entityID = document.getElementById('entityID'+'-'+this.uid).children[1].value;
         const attributeName = document.getElementById('attributeName'+'-'+this.uid).children[1].value;
         const op = document.getElementById('op'+'-'+this.uid).children[1].value;
-        const value = document.getElementById('newValue'+'-'+this.uid).children[1].value;
+        const value = document.getElementById('value'+'-'+this.uid).children[1].value;
     
         let script = `story.addCondition('${conditionID}', '${parentID}', '${entityID}', '${attributeName}', '${op}', ${value});`;
 
@@ -153,6 +153,7 @@ class SGCreator {
                 name: 'text',
                 value: 'text',
                 type: 'text',
+                color: 'linear-gradient(62deg, #FBAB7E 0%, #F7CE68 100%)',
             },
             story:{
                 id: 'text',
@@ -167,6 +168,7 @@ class SGCreator {
                     name:'scene',
                     type:'scene',
                 },
+                color: 'linear-gradient(90deg, #FF9A8B 0%, #FF6A88 55%, #FF99AC 100%)',
                 // TODO: add entities and attributes into story
             },
             scene:{
@@ -190,6 +192,7 @@ class SGCreator {
                     name:'exit effect',
                     type:'effect',
                 },
+                color: 'linear-gradient(62deg, #8EC5FC 0%, #E0C3FC 100%)',
             },
             choice:{
                 id: 'text',
@@ -209,6 +212,7 @@ class SGCreator {
                     name:'rejection effect',
                     type:'effect',
                 },
+                color: '',
             },
             effect:{
                 id: 'text',
@@ -221,6 +225,7 @@ class SGCreator {
                     name:'condition',
                     type:'condition',
                 },
+                color: 'green',
             },
             condition:{
                 id: 'text',
@@ -228,6 +233,7 @@ class SGCreator {
                 attributeName:'text',
                 op:'text',
                 value:'text',
+                color: 'grey',
             },
         };
 
@@ -256,13 +262,15 @@ class SGCreator {
 
     createElement(type, parentDivId, parent_uid) {
         let element = document.createElement("div");
+        let color = this.SGElementUIConfig[type]['color'];
+        element.style.backgroundImage = color;
 
         const uid = this.getUID();
         element.id = uid;
 
         let optionsPanel = document.createElement('div');
         optionsPanel.id = 'options' + '-' + uid;
-        this.appendDivs(optionsPanel, uid, 'options-panel');
+        this.appendDivs(optionsPanel, uid, 'options-panel', type);
 
         let contentPanel = document.createElement('div');
         contentPanel.id = 'content' + '-' + uid;
@@ -292,7 +300,7 @@ class SGCreator {
         parentDiv.append(element);
     }
 
-    appendDivs(elementDiv, uid, configName) {
+    appendDivs(elementDiv, uid, configName, info=undefined) {
         const config = this.SGElementUIConfig[configName];
 
         if (config === undefined)
@@ -303,13 +311,15 @@ class SGCreator {
 
             if (key.substr(0, 4) === 'add#')
                 type = 'add';
+            else if (key === 'color')
+                return;
             
             let newElement = document.createElement('div');
             newElement.style.width = '100%';
 
             switch (type) {
                 case 'options-panel':
-                    newElement.style.textAlign = 'right';
+                    newElement.style.textAlign = 'left';
 
                     // collapse/expand button
                     let resizeButton = document.createElement('button');
@@ -354,9 +364,19 @@ class SGCreator {
 
                     scriptButton.style.margin = '5px';
 
+                    // info div
+                    let infoDiv = document.createElement('div');
+                    infoDiv.innerText = `${info} node`;
+                    infoDiv.style.width = '60%';
+                    infoDiv.style.textAlign = 'center';
+                    infoDiv.style.display = 'inline-block';
+
+                    infoDiv.style.margin = '5px';
+
                     newElement.appendChild(resizeButton);
                     newElement.appendChild(deleteButton);
                     newElement.appendChild(scriptButton);
+                    newElement.appendChild(infoDiv);
                     
                     break;
                 case 'text':
@@ -418,8 +438,6 @@ class SGCreator {
                     newElement.append(addButton);
 
                     break;
-                case 'color':
-                    break;
                 default:
                     throw new Error(`unknow config type '${type}' requested`);
             }
@@ -463,6 +481,12 @@ class SGCreator {
         return script;
     }
 
+    saveScript() {
+        const script = this.generateScript();
+        localStorage.setItem('SGScript', script);
+        alert("successfully saved the script!");
+    }
+
     // recursively deletes all the children element when the parent element is deleted
     deleteElement(uid) {
         let children = this.childrenOf[uid];
@@ -478,12 +502,6 @@ class SGCreator {
         document.getElementById(uid).remove();
         delete this.elementPool[uid];
     }
-}
-
-function saveScript() {
-    const script = creator.generateScript();
-    // store the script into localStorage
-    localStorage.setItem('SGScript', script);
 }
 
 // TODO: remove handlers from js files (not necessarily this one)
