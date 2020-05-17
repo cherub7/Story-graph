@@ -1,0 +1,22 @@
+.body {
+    text-align: center;
+}
+
+#play-area {
+    height: 200%;
+    width: 100%;
+    display: inline-block;
+    scroll-behavior: auto;
+}
+
+.node {
+    width: fit-content;
+    display: inline-block;
+    position: absolute;
+    text-align: center;
+}
+
+.node-content {
+    color: white;
+    text-align: center;
+}

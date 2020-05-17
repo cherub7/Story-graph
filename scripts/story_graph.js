@@ -363,6 +363,15 @@ class SGStory extends SGEntity {
         this.attributes.addValueForKey('entities', new SGUnorderedCollection('entity'), 'object');
     }
 
+    // methods to change start scene (TODO: design it properly)
+    setStartSceneID(startSceneID) {
+        this.attributes.editValueForKey('startSceneID', startSceneID, 'string');
+    }
+
+    getStartSceneID(startSceneID) {
+        return this.attributes.getValueForKey('startSceneID');
+    }
+
     // entity adders: add an entity into story
     addAttribute(entityID, attributeName, value, type) {
         let entity = this.getEntity(entityID, 'None');

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Builder</title>
+
+    <link rel="stylesheet" type="text/css" href="./../styles/story_builder.css">
+    <link rel="stylesheet" type="text/css" href="./../styles/external/bulma.min.css">
+</head>
+<body>
+    <section class="hero is-light is-fullheight">
+      <!-- Modals -->
+      <div id="story-modal" class="modal">
+        <div class="modal-background">
+        </div>
+        <div class="modal-card">
+            <header class="modal-card-head" style="text-align: center;">
+                <p id="story-modal-title" class="modal-card-title">Story Details</p>
+                <button onclick="closeStoryModal()" class="delete" aria-label="close"></button>
+            </header>
+            <section id="story-modal-body" class="modal-card-body">
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                      <label class="label">Name</label>
+                    </div>
+                    <div class="field-body">
+                      <div class="field">
+                        <p class="control">
+                          <input id="story-name" class="input" type="text" placeholder="Name of the Story">
+                        </p>
+                      </div>
+                    </div>
+                </div>
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                      <label class="label">ID</label>
+                    </div>
+                    <div class="field-body">
+                      <div class="field">
+                        <p class="control">
+                            <span id="story-id" class="tag is-warning">story</span>
+                        </p>
+                      </div>
+                    </div>
+                </div>
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                      <label class="label">Description</label>
+                    </div>
+                    <div class="field-body">
+                      <div class="field">
+                        <div class="control">
+                            <textarea id="story-description" class="textarea" placeholder="Story description..."></textarea>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label is-normal">
+                    <label class="label">Start Scene</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="select is-info">
+                      <select id='start-scene-select-options'>
+                      </select>
+                    </div>
+                  </div>
+              </div>
+            </section>
+            <footer id="story-modal-footer" class="modal-card-foot" style='text-align: center; display: inline;'>
+            </footer>
+        </div>
+      </div>
+
+      <div id="scene-modal" class="modal">
+          <div class="modal-background">
+          </div>
+          <div class="modal-card">
+              <header class="modal-card-head" style="text-align: center;">
+                  <p id="scene-modal-title" class="modal-card-title"></p>
+                  <button onclick="closeSceneModal()" class="delete" aria-label="close"></button>
+              </header>
+              <section id="scene-modal-body" class="modal-card-body">
+                  <div class="field is-horizontal">
+                      <div class="field-label is-normal">
+                        <label class="label">Name</label>
+                      </div>
+                      <div class="field-body">
+                        <div class="field">
+                          <p class="control">
+                            <input id="scene-name" class="input" type="text" placeholder="Name of the Scene">
+                          </p>
+                        </div>
+                      </div>
+                  </div>
+                  <div class="field is-horizontal">
+                      <div class="field-label is-normal">
+                        <label class="label">ID</label>
+                      </div>
+                      <div class="field-body">
+                        <div class="field">
+                          <p class="control">
+                              <span id="scene-id" class="tag is-info">scene-#x</span>
+                          </p>
+                        </div>
+                      </div>
+                  </div>
+                  <div class="field is-horizontal">
+                      <div class="field-label is-normal">
+                        <label class="label">Description</label>
+                      </div>
+                      <div class="field-body">
+                        <div class="field">
+                          <div class="control">
+                              <textarea id="scene-description" class="textarea" placeholder="Scene description..."></textarea>
+                          </div>
+                        </div>
+                      </div>
+                  </div>
+              </section>
+              <footer id="scene-modal-footer" class="modal-card-foot" style='text-align: center; display: inline;'>
+              </footer>
+          </div>
+      </div>
+
+      <div id="choice-modal" class="modal">
+          <div class="modal-background">
+          </div>
+          <div class="modal-card">
+              <header class="modal-card-head" style="text-align: center;">
+                  <p id="choice-modal-title" class="modal-card-title"></p>
+                  <button onclick="closeChoiceModal()" class="delete" aria-label="close"></button>
+              </header>
+              <section id="choice-modal-body" class="modal-card-body">
+                  <div class="field is-horizontal">
+                      <div class="field-label is-normal">
+                        <label class="label">Name</label>
+                      </div>
+                      <div class="field-body">
+                        <div class="field">
+                          <p class="control">
+                            <input id="choice-name" class="input" type="text" placeholder="Name of the Choice">
+                          </p>
+                        </div>
+                      </div>
+                  </div>
+                  <div class="field is-horizontal">
+                      <div class="field-label is-normal">
+                        <label class="label">ID</label>
+                      </div>
+                      <div class="field-body">
+                        <div class="field">
+                          <p class="control">
+                              <span id="choice-id" class="tag is-danger">choice-#x</span>
+                          </p>
+                        </div>
+                      </div>
+                  </div>
+                  <div class="field is-horizontal">
+                      <div class="field-label is-normal">
+                        <label class="label">Description</label>
+                      </div>
+                      <div class="field-body">
+                        <div class="field">
+                          <div class="control">
+                              <textarea id="choice-description" class="textarea" placeholder="Choice description..."></textarea>
+                          </div>
+                        </div>
+                      </div>
+                  </div>
+                  <div class="field is-horizontal">
+                      <div class="field-label is-normal">
+                        <label class="label">From Scene</label>
+                      </div>
+                      <div class="field-body">
+                        <div class="field">
+                          <div class="tags has-addons">
+                              <span id="choice-from-scene-id" class="tag is-info">scene-#x</span>
+                              <span id="choice-from-scene-name" class="tag">xyz</span>
+                          </div>
+                        </div>
+                      </div>
+                  </div>
+                  <div class="field is-horizontal">
+                      <div class="field-label is-normal">
+                        <label class="label">To Scene</label>
+                      </div>
+                      <div class="field-body">
+                        <div class="field">
+                          <div class="field">
+                              <div class="tags has-addons">
+                                  <span id="choice-to-scene-id" class="tag is-info">choice-#x</span>
+                                  <span id="choice-to-scene-name" class="tag">xyz</span>
+                              </div>
+                          </div>
+                        </div>
+                      </div>
+                  </div>
+              </section>
+              <footer id="choice-modal-footer" class="modal-card-foot" style='text-align: center; display: inline;'>
+              </footer>
+          </div>
+      </div>
+
+      <div id="add-choice-modal" class="modal">
+          <div class="modal-background"></div>
+          <div class="modal-card">
+              <header class="modal-card-head" style="text-align: center;">
+                  <p id="add-choice-modal-title" class="modal-card-title">Add Choice</p>
+                  <button onclick="closeAddChoiceModal()" class="delete" aria-label="close"></button>
+              </header>
+              <section id="add-choice-modal-body" class="modal-card-body">
+                  Add a Choice from
+                  <div class="select is-danger">
+                      <select id='from-scene-select-options'>
+                      </select>
+                  </div> 
+                  to
+                  <div class="select is-danger">
+                      <select id='to-scene-select-options'>
+                      </select>
+                  </div>
+                  <hr />
+                  <div class="field is-horizontal">
+                      <div class="field-label is-normal">
+                        <label class="label">Name</label>
+                      </div>
+                      <div class="field-body">
+                        <div class="field">
+                          <p class="control">
+                            <input id="new-choice-name" class="input" type="text" placeholder="Name of the Choice">
+                          </p>
+                        </div>
+                      </div>
+                  </div>
+                  <div class="field is-horizontal">
+                      <div class="field-label is-normal">
+                        <label class="label">ID</label>
+                      </div>
+                      <div class="field-body">
+                        <div class="field">
+                          <p class="control">
+                              <span id="new-choice-id" class="tag is-danger">choice-#x</span>
+                          </p>
+                        </div>
+                      </div>
+                  </div>
+                  <div class="field is-horizontal">
+                      <div class="field-label is-normal">
+                        <label class="label">Description</label>
+                      </div>
+                      <div class="field-body">
+                        <div class="field">
+                          <div class="control">
+                              <textarea id="new-choice-description" class="textarea" placeholder="Choice description..."></textarea>
+                          </div>
+                        </div>
+                      </div>
+                  </div>
+              </section>
+              <footer id="add-choice-modal-footer" class="modal-card-foot" style='text-align: center; display: inline;'>
+              </footer>
+          </div>
+      </div>
+
+      <div id="edit-choices-for-scene-modal" class="modal">
+        <div class="modal-background"></div>
+          <div class="modal-card">
+              <header class="modal-card-head" style="text-align: center;">
+                  <p id="edit-choices-for-scene-modal-title" class="modal-card-title">scene-#x's choices</p>
+                  <button onclick="closeEditChoicesForSceneModal()" class="delete" aria-label="close"></button>
+              </header>
+              <section id="edit-choices-for-scene-modal-body" class="modal-card-body">
+                  <!--list of choices with edit and delete options-->
+              </section>
+              <footer id="edit-choices-for-scene-modal-footer" class="modal-card-foot" style='text-align: center; display: inline;'>
+              </footer>
+          </div>
+      </div>
+
+      <div id="script-modal" class="modal">
+        <div class="modal-background"></div>
+          <div class="modal-card">
+              <header class="modal-card-head" style="text-align: center;">
+                  <p id="script-modal-title" class="modal-card-title">Script for your story</p>
+                  <button onclick="closeScriptModal()" class="delete" aria-label="close"></button>
+              </header>
+              <section id="script-modal-body" class="modal-card-body">
+                <pre class="notification is-success" id="script-container"></pre>
+              </section>
+              <footer id="script-modal-footer" class="modal-card-foot" style='text-align: center; display: inline;'>
+              </footer>
+          </div>
+      </div>
+
+      <!--Tools-->
+      <div class="level">
+        <div clas="level-left">
+          <div class="buttons has-addons level-item">
+            <span class="button is-small is-rounded is-light is-info" onclick="addScene()">Add Scene</span>
+            <span class="button is-small is-rounded is-light is-danger" onclick="openAddChoiceModal()">Add Choice</span>
+            <span class="button is-small is-rounded is-light is-warning" onclick="openStoryModal()">Story Details</span>
+            <span class="button is-small is-rounded is-light is-success" onclick="openScriptModal()">Generate Script</span>
+          </div>
+        </div>
+        <div clas="level-right">
+          <div class="buttons has-addons level-item">
+            <span class="button is-small is-rounded is-light is-info" onclick="javascript:window.location = './story_graph.html'">Story Graph</span>
+            <span class="button is-small is-rounded is-light is-danger" onclick="javascript:window.location = './story_player.html'">Story Player</span>
+          </div>
+        </div>
+      </div>
+
+      <!--Play Area-->
+      <div class="container is-fluid" id="play-area">
+      </div>
+    </section>
+
+    <script src="./../scripts/story_builder.js"></script>
+    <script src="./../scripts/external/plain-draggable.min.js"></script>
+    <script src="./../scripts/external/leader-line.min.js"></script>
+</body>
+</html>

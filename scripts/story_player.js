@@ -1,8 +1,18 @@
+/************************************************
+ * Required divs on page these are the components 
+ * whose content change as story proceeds.
+ * 
+ * 1. undo_ref
+ * 2. redo_ref
+ * 3. scene_desc
+ * 4. choices_list
+ * 5. scene_name (TODO)
+ ************************************************/
 
 class SGPlayer {
     constructor(story) {
         this.story = story;
-        this.currentSceneID = 'start';
+        this.currentSceneID = story.getStartSceneID();
         
         this.undoStack = [];
         this.redoStack = []
@@ -18,6 +28,7 @@ class SGPlayer {
         const scene = this.story.getScene(sceneId);
         scene.performEntryEffects(this.story);
         
+        document.getElementById('scene_name').innerHTML = scene.getAttributeValue('name');
         document.getElementById('scene_desc').innerHTML = scene.getAttributeValue('description');
 
         let choicesList = '';
@@ -107,21 +118,48 @@ class SGPlayer {
     change(story) {
         this.reset();
         this.story = story;
-        this.play('start');
+        let startSceneID = story.getStartSceneID();
+        this.play(startSceneID);
     }
 
-    // loads story from script stored in localStory
+    // loads story from script stored in localStorage
     load() {
-        let script = localStorage.getItem('SGScript');
+        let script = localStorage.getItem('story_graph_story');
         
         if (script !== null) {
-            eval(script);
-            this.change(story);
+            let newStory = this.buildStory(script);
+            this.change(newStory);
         }
         else {
             alert("No saved script found.");
         }
     }
+
+    // builds the story from JSON provide
+    buildStory(script) {
+        // build order: ['story', 'scenes', 'choices', 'effects', 'conditions', 'attributes']
+        let scriptObj = JSON.parse(script);
+
+        // story
+        let { id, name, description, startSceneID } = scriptObj['story'];
+        let story = new SGStory(id, name, 'none', description);
+        story.setStartSceneID(startSceneID);
+
+        // scenes
+        for (let scene of scriptObj['scenes'].values()) {
+            let { id, name, description } = scene;
+            story.addScene(id, name, 'none', description);
+        }
+
+        // choices
+        for (let choice of scriptObj['choices'].values()) {
+            let { id, name, description, fromSceneID, toSceneID } = choice;
+            story.addChoice(id, name, 'none', description, fromSceneID, toSceneID);
+        }
+
+        return story;
+    }
 }
 
+// initially play a demo story
 player = new SGPlayer(story);

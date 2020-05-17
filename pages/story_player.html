@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Player</title>
+
+    <link rel="stylesheet" type="text/css" href="./../styles/external/bulma.min.css">
+</head>
+<body>
+    <section class="hero is-light is-fullheight">
+        <!--Tools-->
+        <div class="level">
+            <div clas="level-left">
+                <div class="buttons has-addons level-item">
+                    <span id="undo_ref" class="button is-small is-rounded is-light is-danger" onclick="javascript: player.undo();">Undo</span>
+                    <span id="redo_ref" class="button is-small is-rounded is-light is-info" onclick="javascript: player.redo();">Redo</span>
+                    <span class="button is-small is-rounded is-light is-success" onclick="javascript: player.reset();">Reset</span>
+                </div>
+            </div>
+            <div clas="level-right">
+                <div class="buttons has-addons level-item">
+                    <span class="button is-small is-rounded is-light is-info" onclick="javascript:window.location = './story_graph.html'">Story Graph</span>
+                    <span class="button is-small is-rounded is-light is-danger" onclick="javascript:window.location = './story_builder.html'">Story Builder</span>
+                </div>
+            </div>
+        </div>
+
+        <!--Player-->
+        <div class="container">
+            <div class="level-item">
+                <article class="message is-info">
+                    <div class="message-header">
+                        <p id='scene_name'>Scene Name</p>
+                    </div>
+                    <div class="message-body">
+                        <p id='scene_desc'>Scene description goes here</p>
+                        <ul id='choices_list'>
+                            <li>choices go here</li>
+                            <li>test it</li>
+                        </ul>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <script src="./../scripts/story_graph.js"></script>
+    <script src="./../scripts/test_story.js"></script>
+    <script src="./../scripts/story_player.js"></script>
+</body>
+</html>
