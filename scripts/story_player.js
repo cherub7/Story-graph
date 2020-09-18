@@ -27,9 +27,9 @@ class SGPlayer {
 
         const scene = this.story.getScene(sceneId);
         scene.performEntryEffects(this.story);
-        
-        document.getElementById('scene_name').innerHTML = scene.getAttributeValue('name');
-        document.getElementById('scene_desc').innerHTML = scene.getAttributeValue('description');
+
+        document.getElementById('scene_name').innerHTML = this.processString(scene.getAttributeValue('name'));
+        document.getElementById('scene_desc').innerHTML = this.processString(scene.getAttributeValue('description'));
 
         let choicesList = '';
         let choiceIds = scene.getChoiceIDs();
@@ -120,6 +120,45 @@ class SGPlayer {
         this.story = story;
         let startSceneID = story.getStartSceneID();
         this.play(startSceneID);
+    }
+
+    // processes strings to replace attributes with their values
+    processString(str) {
+        const regex = RegExp('{attr:(.*?)}', 'g');
+        let newStr = str;
+        let words;
+
+        while ((words = regex.exec(str)) !== null) {
+            let word = words[0];
+
+            // trim between str.indexOf(':') and }
+            word = word.slice(word.indexOf(':')+1, -1);
+
+            // split at .
+            let ids = word.split('.');
+            console.log(ids.length);
+
+            // todo: support wider variety of attribute value access
+            // For now, we support two possibilities for now:
+            // 1. attributeName (direct story attribute)
+            // 2. entityID.attributeName (someother entity's attribute)
+            let value = '';
+
+            if (ids.length === 1) {
+                let attributeName = ids[0];
+                value = '' + this.story.getAttributeValue(attributeName);
+            } else if (ids.length === 2) {
+                let entityID = ids[0];
+                let attributeName = ids[1];
+                value = '' + this.story.getEntity(entityID).getAttributeValue(attributeName);
+            }
+
+            // replace with value
+            newStr = newStr.replaceAll(words[0], value);
+            console.log(`${words[0]}, ${word}, ${value}`);
+        }
+
+        return newStr;
     }
 
     // loads story from script stored in localStorage

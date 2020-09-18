@@ -8,7 +8,7 @@ story.addScene('start', 'welcome note', 'None',
                 `This is a simple text story created using <b><a href="https://github.com/cherub7/story-graph">Story Graph</a></b>.<br/>
                 <b>Story Graph</b> is a tool to build and play your stories.<br/>
                 It is still in development.<br/><br/>
-                <li> BUILD and save your story using <b><a href="create_story.html">UI builder</a></b> (still in construction)<br/>
+                <li> BUILD and save your story using <b><a href="./story_builder.html">Story Builder</a></b> (still in construction)<br/>
                 <li> LOAD and play your <a href="javascript:player.load();">saved story</a><br/>`,
                 'string');
 
@@ -89,7 +89,7 @@ story.addScene('s8', 'hunger kills!', 'None',
                 'string');
 
 // guard
-story.addScene('s9', 'guard', 'None',
+story.addScene('s9', 'guard <b>pleadCount: {attr:s9.pleadCount}</b>', 'None',
                 `<b>Guard</b>: Hey! What are you doing here? This passage can only be<br/>
                 accessed by the royal family. GET BACK!!<br/>`,
                 'string');

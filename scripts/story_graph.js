@@ -2,6 +2,20 @@
 /**************************************************
  * Value
  **************************************************/
+const typeDetails = {
+    boolean: {
+        operations: ['=', '!', '||', '&&'],
+    },
+    number: {
+        operations: ['=', '+', '-', '*', '/', 'random'],
+    },
+    string: {
+        operations: ['=', 'append', 'prepend'],
+    },
+    object: {
+        operations: ['='],
+    },
+}
 
 class SGValue {
     constructor(value, type) {
@@ -19,8 +33,53 @@ class SGValue {
 
     modify(op, newValue, newType) {
         let modifiedValue = newValue;
-        if (op !== '=')
-            modifiedValue = eval(`${this.value} ${op} ${newValue};`);
+        
+        console.log(`inside modify(op: ${op}, val: ${newValue}, type: ${newType})`);
+
+        // modify the present value
+        if (typeof(newValue) == newType)
+        {
+            if (!typeDetails[newType].operations.includes(op))
+            {
+                throw new Error(`unkown operation '${op}' for type '${newType}' is passed`);
+            }
+
+            if (op !== '=')
+            {
+                if (newType === 'boolean')
+                {
+                    if (op === '||') modifiedValue = this.value || newValue;
+                    if (op === '&&') modifiedValue = this.value && newValue;
+                    if (op === '!')  modifiedValue = (!this.value);
+                }
+                else if (newType == 'number')
+                {
+                    if (op === '+') modifiedValue = this.value + newValue;
+                    if (op === '-') modifiedValue = this.value - newValue;
+                    if (op === '*') modifiedValue = this.value * newValue;
+                    if (op === '/') modifiedValue = this.value / newValue;
+                    if (op === 'random') modifiedValue = Math.random();
+                }
+                else if (newType === 'string')
+                {
+                    if (op === 'append') modifiedValue = this.value + newValue;
+                    if (op === 'prepend') modifiedValue = newValue + this.value;
+                }
+                else if (newType === 'object')
+                {
+                    // no operations to modify objects as of now
+                }
+                else
+                {
+                    throw new Error(`unkown type '${newType}' passed`);
+                }
+            }
+        }
+        else 
+        {
+            throw new Error(`wrong value (${newValue}) for type '${newType}' is passed`);
+        }
+
         return new SGValue(modifiedValue, newType);
     }
 }
