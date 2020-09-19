@@ -435,7 +435,7 @@ function openSceneModal(sceneID) {
 
         let sceneNameDiv = document.getElementById('scene-name');
         let sceneIDDiv = document.getElementById('scene-id');
-        let sceneDescriptionDiv = document.getElementById('scene-description');
+        let sceneDescriptionDiv = document.getElementsByClassName('ql-editor')[0];
 
         // fetching details
         sceneDetails = sceneMap.get(sceneID);
@@ -444,7 +444,7 @@ function openSceneModal(sceneID) {
         sceneModalTitle.innerText = sceneDetails['name'];
         sceneNameDiv.value = sceneDetails['name'];
         sceneIDDiv.innerText = sceneDetails['id'];
-        sceneDescriptionDiv.value = sceneDetails['description'];
+        sceneDescriptionDiv.innerHTML = sceneDetails['description'];
 
         // save details
         let saveButton = document.createElement('button');
@@ -455,7 +455,7 @@ function openSceneModal(sceneID) {
             let updatedDetails = {
                 name: sceneNameDiv.value,
                 id: sceneIDDiv.innerText,
-                description: sceneDescriptionDiv.value
+                description: sceneDescriptionDiv.innerHTML
             };
             sceneMap.set(sceneID, updatedDetails);
 

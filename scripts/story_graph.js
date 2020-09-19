@@ -33,8 +33,6 @@ class SGValue {
 
     modify(op, newValue, newType) {
         let modifiedValue = newValue;
-        
-        console.log(`inside modify(op: ${op}, val: ${newValue}, type: ${newType})`);
 
         // modify the present value
         if (typeof(newValue) == newType)

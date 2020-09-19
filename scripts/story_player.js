@@ -136,7 +136,6 @@ class SGPlayer {
 
             // split at .
             let ids = word.split('.');
-            console.log(ids.length);
 
             // todo: support wider variety of attribute value access
             // For now, we support two possibilities for now:
@@ -155,7 +154,6 @@ class SGPlayer {
 
             // replace with value
             newStr = newStr.replaceAll(words[0], value);
-            console.log(`${words[0]}, ${word}, ${value}`);
         }
 
         return newStr;
